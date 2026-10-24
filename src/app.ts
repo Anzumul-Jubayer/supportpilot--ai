@@ -8,6 +8,7 @@ import {
   type AuthenticatedRequest,
 } from "./modules/auth/auth.middleware.js";
 import { authorize } from "./modules/auth/authorize.js";
+import ticketRoutes from "./modules/tickets/ticket.routes.js";
 const app = express();
 
 app.use(express.json());
@@ -64,5 +65,7 @@ app.get(
 );
 // Registration and login routes
 app.use("/api/v1/auth", authRoutes);
+// ticket
+app.use("/api/v1/tickets", ticketRoutes);
 
 export default app;
