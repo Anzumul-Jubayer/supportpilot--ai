@@ -1,10 +1,18 @@
 import express from "express";
+import type { Response } from "express";
+
 import { prisma } from "./lib/prisma.js";
 import authRoutes from "./modules/auth/auth.routes.js";
+import {
+  authenticate,
+  type AuthenticatedRequest,
+} from "./modules/auth/auth.middleware.js";
+import { authorize } from "./modules/auth/authorize.js";
 const app = express();
 
 app.use(express.json());
-app.use("/api/v1/auth", authRoutes);
+
+// Health check
 app.get("/api/v1/health", (_req, res) => {
   res.status(200).json({
     success: true,
@@ -12,6 +20,7 @@ app.get("/api/v1/health", (_req, res) => {
   });
 });
 
+// Database health check
 app.get("/api/v1/health/db", async (_req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
@@ -27,5 +36,33 @@ app.get("/api/v1/health/db", async (_req, res) => {
     });
   }
 });
+
+// Protected user endpoint
+app.get(
+  "/api/v1/auth/me",
+  authenticate,
+  (req: AuthenticatedRequest, res: Response) => {
+    res.status(200).json({
+      success: true,
+      data: {
+        userId: req.user!.id,
+        role: req.user!.role,
+      },
+    });
+  }
+);
+app.get(
+  "/api/v1/auth/agent-test",
+  authenticate,
+  authorize("AGENT", "ADMIN"),
+  (_req, res) => {
+    res.status(200).json({
+      success: true,
+      message: "Agent access granted",
+    });
+  }
+);
+// Registration and login routes
+app.use("/api/v1/auth", authRoutes);
 
 export default app;
