@@ -30,12 +30,14 @@ app.get("/api/v1/health/db", async (_req, res) => {
       success: true,
       database: "connected",
     });
-  } catch {
-    res.status(503).json({
-      success: false,
-      database: "unavailable",
-    });
-  }
+  }  catch (error) {
+  console.error("Database health check failed:", error);
+
+  res.status(503).json({
+    success: false,
+    database: "unavailable",
+  });
+}
 });
 
 // Protected user endpoint
