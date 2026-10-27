@@ -1,4 +1,3 @@
-
 import { prisma } from "../../lib/prisma.js";
 import type { CreateTicketInput } from "./ticket.schema.js";
 import type { Prisma } from "../../../generated/prisma/client.js";
@@ -10,9 +9,10 @@ type ListTicketsOptions = {
   userId: string;
   role: "CUSTOMER" | "AGENT" | "ADMIN";
 };
+type TicketRole = "CUSTOMER" | "AGENT" | "ADMIN";
 export async function createTicket(
   input: CreateTicketInput,
-  creatorId: string
+  creatorId: string,
 ) {
   return prisma.ticket.create({
     data: {
@@ -37,12 +37,9 @@ export async function getTickets(
   userId: string,
   role: UserRole,
   page: number,
-  limit: number
+  limit: number,
 ) {
-  const where =
-    role === "CUSTOMER"
-      ? { creatorId: userId }
-      : {};
+  const where = role === "CUSTOMER" ? { creatorId: userId } : {};
 
   const [tickets, total] = await prisma.$transaction([
     prisma.ticket.findMany({
@@ -76,7 +73,6 @@ export async function getTickets(
     },
   };
 }
-
 
 export async function listTickets(options: ListTicketsOptions) {
   const { page, limit, status, userId, role } = options;
@@ -115,4 +111,39 @@ export async function listTickets(options: ListTicketsOptions) {
       totalPages: Math.ceil(total / limit),
     },
   };
+}
+
+export async function getTicketById(
+  ticketId: string,
+  userId: string,
+  role: TicketRole,
+) {
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      status: true,
+      priority: true,
+      category: true,
+      aiSummary: true,
+      aiReply: true,
+      createdAt: true,
+      updatedAt: true,
+      creatorId: true,
+      assigneeId: true,
+    },
+  });
+
+  if (!ticket) {
+    return null;
+  }
+
+  // Customers can only access their own tickets.
+  if (role === "CUSTOMER" && ticket.creatorId !== userId) {
+    return null;
+  }
+
+  return ticket;
 }
