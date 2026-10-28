@@ -26,6 +26,9 @@ export const updateTicketStatusSchema = z.object({
 export const assignTicketSchema = z.object({
   assigneeId: z.string().uuid(),
 });
+export const createCommentSchema = z.object({
+  content: z.string().trim().min(1).max(3000),
+});
 export type CreateTicketInput = z.infer<
   typeof createTicketSchema
 >;

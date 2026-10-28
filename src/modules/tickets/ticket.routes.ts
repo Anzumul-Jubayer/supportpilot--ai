@@ -26,11 +26,25 @@ router.patch(
   authorize("AGENT", "ADMIN"),
   updateTicketStatusHandler,
 );
-
+import {
+  createCommentHandler,
+  listCommentsHandler,
+} from "./comment.controller.js";
 router.patch(
   "/:id/assign",
   authenticate,
   authorize("AGENT", "ADMIN"),
   assignTicketHandler,
+);
+router.post(
+  "/:id/comments",
+  authenticate,
+  createCommentHandler,
+);
+
+router.get(
+  "/:id/comments",
+  authenticate,
+  listCommentsHandler,
 );
 export default router;
