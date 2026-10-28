@@ -14,6 +14,18 @@ export const listTicketsSchema = z.object({
     "CLOSED",
   ]).optional(),
 });
+export const updateTicketStatusSchema = z.object({
+  status: z.enum([
+    "OPEN",
+    "IN_PROGRESS",
+    "RESOLVED",
+    "CLOSED",
+  ]),
+});
+
+export const assignTicketSchema = z.object({
+  assigneeId: z.string().uuid(),
+});
 export type CreateTicketInput = z.infer<
   typeof createTicketSchema
 >;

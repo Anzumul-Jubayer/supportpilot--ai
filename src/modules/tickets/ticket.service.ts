@@ -10,6 +10,7 @@ type ListTicketsOptions = {
   role: "CUSTOMER" | "AGENT" | "ADMIN";
 };
 type TicketRole = "CUSTOMER" | "AGENT" | "ADMIN";
+type TicketStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
 export async function createTicket(
   input: CreateTicketInput,
   creatorId: string,
@@ -146,4 +147,72 @@ export async function getTicketById(
   }
 
   return ticket;
+}
+
+
+export async function updateTicketStatus(
+  ticketId: string,
+  status: TicketStatus,
+) {
+  const existingTicket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: { id: true },
+  });
+
+  if (!existingTicket) {
+    return null;
+  }
+
+  return prisma.ticket.update({
+    where: { id: ticketId },
+    data: { status },
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      priority: true,
+      updatedAt: true,
+    },
+  });
+}
+
+export async function assignTicket(
+  ticketId: string,
+  assigneeId: string,
+) {
+  // Only existing AGENT accounts can be assigned tickets.
+  const agent = await prisma.user.findFirst({
+    where: {
+      id: assigneeId,
+      role: "AGENT",
+    },
+    select: { id: true },
+  });
+
+  if (!agent) {
+    return { error: "AGENT_NOT_FOUND" } as const;
+  }
+
+  const existingTicket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: { id: true },
+  });
+
+  if (!existingTicket) {
+    return { error: "TICKET_NOT_FOUND" } as const;
+  }
+
+  const ticket = await prisma.ticket.update({
+    where: { id: ticketId },
+    data: { assigneeId: agent.id },
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      assigneeId: true,
+      updatedAt: true,
+    },
+  });
+
+  return { ticket } as const;
 }
