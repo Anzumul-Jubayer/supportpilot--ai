@@ -48,6 +48,7 @@ model Ticket {
   description String
   status      TicketStatus   @default(OPEN)
   priority    TicketPriority @default(MEDIUM)
+  aiPriority  TicketPriority?
   category    String?
   aiSummary   String?
   aiReply     String?

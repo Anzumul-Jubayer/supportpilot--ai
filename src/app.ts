@@ -9,6 +9,7 @@ import {
 } from "./modules/auth/auth.middleware.js";
 import { authorize } from "./modules/auth/authorize.js";
 import ticketRoutes from "./modules/tickets/ticket.routes.js";
+import aiRoutes from "./modules/ai/ai.routes.js";
 const app = express();
 
 app.use(express.json());
@@ -69,5 +70,5 @@ app.get(
 app.use("/api/v1/auth", authRoutes);
 // ticket
 app.use("/api/v1/tickets", ticketRoutes);
-
+app.use("/api/v1/ai", aiRoutes);
 export default app;
