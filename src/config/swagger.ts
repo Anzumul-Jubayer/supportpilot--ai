@@ -13,12 +13,18 @@ const swaggerDocument: OpenAPIV3.Document = {
       "API documentation for SupportPilot AI, a customer support ticket management API.",
   },
 
+  // servers: [
+  //   {
+  //     url: "http://localhost:3000",
+  //     description: "Local development server",
+  //   },
+  // ],
   servers: [
-    {
-      url: "http://localhost:3000",
-      description: "Local development server",
-    },
-  ],
+  {
+    url: "https://supportpilot-ai-g2xp.onrender.com",
+    description: "Production server",
+  },
+],
 
   tags: [
     { name: "Health", description: "API health checks" },
