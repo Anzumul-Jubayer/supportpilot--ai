@@ -10,10 +10,11 @@ import {
 import { authorize } from "./modules/auth/authorize.js";
 import ticketRoutes from "./modules/tickets/ticket.routes.js";
 import aiRoutes from "./modules/ai/ai.routes.js";
+import { setupSwagger } from "./config/swagger.js";
 const app = express();
 
 app.use(express.json());
-
+setupSwagger(app);
 // Health check
 app.get("/api/v1/health", (_req, res) => {
   res.status(200).json({
@@ -72,3 +73,4 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/tickets", ticketRoutes);
 app.use("/api/v1/ai", aiRoutes);
 export default app;
+
