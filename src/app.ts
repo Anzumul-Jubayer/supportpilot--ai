@@ -1,6 +1,6 @@
 import express from "express";
 import type { Response } from "express";
-
+import cors from "cors";
 import { prisma } from "./lib/prisma.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import {
@@ -12,7 +12,16 @@ import ticketRoutes from "./modules/tickets/ticket.routes.js";
 import aiRoutes from "./modules/ai/ai.routes.js";
 import { setupSwagger } from "./config/swagger.js";
 const app = express();
-
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      // "https://YOUR-FRONTEND-DOMAIN.vercel.app",
+    ],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 app.use(express.json());
 setupSwagger(app);
 // Health check
