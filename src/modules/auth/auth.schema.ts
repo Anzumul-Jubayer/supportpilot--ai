@@ -18,6 +18,9 @@ export const loginSchema = z.object({
     .transform((email) => email.toLowerCase()),
   password: z.string().min(1).max(72),
 });
-
+export const googleLoginSchema = z.object({
+  idToken: z.string().min(1, "Google ID token is required"),
+});
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+

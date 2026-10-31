@@ -1,8 +1,18 @@
+
 import type { Request, Response } from "express";
-import { registerSchema } from "./auth.schema.js";
-import { registerUser } from "./auth.service.js";
-import { loginSchema } from "./auth.schema.js";
-import { loginUser } from "./auth.service.js";
+
+import {
+  registerSchema,
+  loginSchema,
+  googleLoginSchema,
+} from "./auth.schema.js";
+
+import {
+  registerUser,
+  loginUser,
+  googleLogin,
+} from "./auth.service.js";
+
 export async function register(req: Request, res: Response): Promise<void> {
   const parsed = registerSchema.safeParse(req.body);
 
@@ -35,7 +45,6 @@ export async function register(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    // Handle a concurrent duplicate registration too.
     if (
       typeof error === "object" &&
       error !== null &&
@@ -57,6 +66,7 @@ export async function register(req: Request, res: Response): Promise<void> {
     });
   }
 }
+
 export async function login(req: Request, res: Response): Promise<void> {
   const parsed = loginSchema.safeParse(req.body);
 
@@ -86,6 +96,50 @@ export async function login(req: Request, res: Response): Promise<void> {
     });
   } catch (error) {
     console.error("Login failed:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+}
+
+export async function googleLoginController(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const parsed = googleLoginSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    res.status(400).json({
+      success: false,
+      message: "Invalid Google login data",
+    });
+    return;
+  }
+
+  try {
+    const result = await googleLogin(parsed.data.idToken);
+
+    res.status(200).json({
+      success: true,
+      message: "Google login successful",
+      data: result,
+    });
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      (error.message === "INVALID_GOOGLE_ACCOUNT" ||
+        error.message === "GOOGLE_ACCOUNT_ALREADY_LINKED")
+    ) {
+      res.status(401).json({
+        success: false,
+        message: "Google authentication failed",
+      });
+      return;
+    }
+
+    console.error("Google login failed:", error);
 
     res.status(500).json({
       success: false,
