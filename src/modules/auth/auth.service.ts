@@ -6,9 +6,7 @@ import { OAuth2Client } from "google-auth-library";
 import { prisma } from "../../lib/prisma.js";
 import type { RegisterInput } from "./auth.schema.js";
 
-const googleClient = new OAuth2Client(
-  process.env.GOOGLE_CLIENT_ID,
-);
+
 
 // Generate JWT for both normal and Google login
 function generateToken(user: {
@@ -101,10 +99,15 @@ export async function loginUser(email: string, password: string) {
 // Google login and registration
 export async function googleLogin(idToken: string) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
-
+console.log(
+  "Google Client ID configured:",
+  Boolean(clientId),
+);
   if (!clientId) {
     throw new Error("GOOGLE_CLIENT_ID is not configured");
   }
+
+  const googleClient = new OAuth2Client(clientId);
 
   const ticket = await googleClient.verifyIdToken({
     idToken,
