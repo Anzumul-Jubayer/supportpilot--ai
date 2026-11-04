@@ -13,18 +13,16 @@ const swaggerDocument: OpenAPIV3.Document = {
       "API documentation for SupportPilot AI, a customer support ticket management API.",
   },
 
-  // servers: [
-  //   {
-  //     url: "http://localhost:3000",
-  //     description: "Local development server",
-  //   },
-  // ],
   servers: [
-  {
-    url: "https://supportpilot-ai-g2xp.onrender.com",
-    description: "Production server",
-  },
-],
+    {
+      url: "https://supportpilot-ai-g2xp.onrender.com",
+      description: "Production server",
+    },
+    {
+      url: "http://localhost:3000",
+      description: "Local development server",
+    },
+  ],
 
   tags: [
     { name: "Health", description: "API health checks" },
@@ -32,6 +30,7 @@ const swaggerDocument: OpenAPIV3.Document = {
     { name: "Tickets", description: "Support ticket management" },
     { name: "Comments", description: "Ticket comments" },
     { name: "AI", description: "AI-assisted ticket analysis" },
+    { name: "Users", description: "User management" },
   ],
 
   paths: {
@@ -146,7 +145,7 @@ const swaggerDocument: OpenAPIV3.Document = {
         tags: ["Tickets"],
         summary: "List tickets",
         description:
-          "Customers see their own tickets. Results are paginated and can be filtered by status.",
+          "Customers see their own tickets, agents see assigned tickets, and admins see all tickets. Results are paginated and can be filtered by status.",
         security: [{ bearerAuth: [] }],
         parameters: [
           {
@@ -364,6 +363,55 @@ const swaggerDocument: OpenAPIV3.Document = {
           "401": { description: "Authentication required" },
           "403": { description: "Insufficient permissions" },
           "404": { description: "Ticket not found" },
+          "500": { description: "Internal server error" },
+        },
+      },
+    },
+
+    "/api/v1/users/agents": {
+      get: {
+        tags: ["Users"],
+        summary: "Get available agents",
+        description:
+          "Returns all AGENT accounts. Requires an authenticated AGENT or ADMIN.",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          "200": {
+            description: "Agents retrieved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: {
+                      type: "boolean",
+                      example: true,
+                    },
+                    data: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string", format: "uuid" },
+                          name: {
+                            type: "string",
+                            example: "Support Agent",
+                          },
+                          email: {
+                            type: "string",
+                            format: "email",
+                            example: "agent@example.com",
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "401": { description: "Authentication required" },
+          "403": { description: "Insufficient permissions" },
           "500": { description: "Internal server error" },
         },
       },
