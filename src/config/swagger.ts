@@ -31,6 +31,7 @@ const swaggerDocument: OpenAPIV3.Document = {
     { name: "Comments", description: "Ticket comments" },
     { name: "AI", description: "AI-assisted ticket analysis" },
     { name: "Users", description: "User management" },
+    { name: "Dashboard", description: "Dashboard statistics and activity" },
   ],
 
   paths: {
@@ -383,20 +384,14 @@ const swaggerDocument: OpenAPIV3.Document = {
                 schema: {
                   type: "object",
                   properties: {
-                    success: {
-                      type: "boolean",
-                      example: true,
-                    },
+                    success: { type: "boolean", example: true },
                     data: {
                       type: "array",
                       items: {
                         type: "object",
                         properties: {
                           id: { type: "string", format: "uuid" },
-                          name: {
-                            type: "string",
-                            example: "Support Agent",
-                          },
+                          name: { type: "string", example: "Support Agent" },
                           email: {
                             type: "string",
                             format: "email",
@@ -413,6 +408,76 @@ const swaggerDocument: OpenAPIV3.Document = {
           "401": { description: "Authentication required" },
           "403": { description: "Insufficient permissions" },
           "500": { description: "Internal server error" },
+        },
+      },
+    },
+
+    "/api/v1/dashboard/stats": {
+      get: {
+        tags: ["Dashboard"],
+        summary: "Get dashboard statistics",
+        description:
+          "Returns ticket counts by status and the five most recent tickets. CUSTOMER users see their own tickets, AGENT users see tickets assigned to them, and ADMIN users see all tickets.",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          "200": {
+            description: "Dashboard statistics retrieved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: {
+                      type: "boolean",
+                      example: true,
+                    },
+                    data: {
+                      type: "object",
+                      properties: {
+                        totalTickets: { type: "integer", example: 12 },
+                        openTickets: { type: "integer", example: 4 },
+                        inProgressTickets: { type: "integer", example: 3 },
+                        resolvedTickets: { type: "integer", example: 4 },
+                        closedTickets: { type: "integer", example: 1 },
+                        recentTickets: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              id: { type: "string", format: "uuid" },
+                              title: {
+                                type: "string",
+                                example: "Unable to access my account",
+                              },
+                              status: {
+                                type: "string",
+                                enum: [
+                                  "OPEN",
+                                  "IN_PROGRESS",
+                                  "RESOLVED",
+                                  "CLOSED",
+                                ],
+                              },
+                              priority: {
+                                type: "string",
+                                enum: ["LOW", "MEDIUM", "HIGH", "URGENT"],
+                              },
+                              createdAt: {
+                                type: "string",
+                                format: "date-time",
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "401": { description: "Authentication required" },
+          "500": { description: "Unable to fetch dashboard statistics" },
         },
       },
     },

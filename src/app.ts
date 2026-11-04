@@ -12,6 +12,7 @@ import ticketRoutes from "./modules/tickets/ticket.routes.js";
 import aiRoutes from "./modules/ai/ai.routes.js";
 import { setupSwagger } from "./config/swagger.js";
 import usersRoutes from "./modules/users/users.routes.js";
+import dashboardRoutes from "./modules/dashboard/dashboard.routes.js";
 const app = express();
 app.use(
   cors({
@@ -25,6 +26,7 @@ app.use(
 );
 app.use(express.json());
 app.use("/api/v1/users", usersRoutes);
+app.use("/api/v1/dashboard", dashboardRoutes);
 setupSwagger(app);
 // Health check
 app.get("/api/v1/health", (_req, res) => {
