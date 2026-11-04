@@ -1,16 +1,21 @@
+
 import { prisma } from "../../lib/prisma.js";
 import type { CreateTicketInput } from "./ticket.schema.js";
 import type { Prisma } from "../../../generated/prisma/client.js";
+
 type UserRole = "CUSTOMER" | "AGENT" | "ADMIN";
+type TicketRole = "CUSTOMER" | "AGENT" | "ADMIN";
+type TicketStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
+
 type ListTicketsOptions = {
   page: number;
   limit: number;
-  status?: "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
+  status?: TicketStatus;
   userId: string;
-  role: "CUSTOMER" | "AGENT" | "ADMIN";
+  role: UserRole;
 };
-type TicketRole = "CUSTOMER" | "AGENT" | "ADMIN";
-type TicketStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
+
+// Create a new ticket
 export async function createTicket(
   input: CreateTicketInput,
   creatorId: string,
@@ -34,13 +39,19 @@ export async function createTicket(
   });
 }
 
+// Get tickets with pagination
 export async function getTickets(
   userId: string,
   role: UserRole,
   page: number,
   limit: number,
 ) {
-  const where = role === "CUSTOMER" ? { creatorId: userId } : {};
+  const where: Prisma.TicketWhereInput =
+    role === "CUSTOMER"
+      ? { creatorId: userId }
+      : role === "AGENT"
+        ? { assigneeId: userId }
+        : {};
 
   const [tickets, total] = await prisma.$transaction([
     prisma.ticket.findMany({
@@ -75,11 +86,13 @@ export async function getTickets(
   };
 }
 
+// Get tickets with optional status filtering
 export async function listTickets(options: ListTicketsOptions) {
   const { page, limit, status, userId, role } = options;
 
   const where: Prisma.TicketWhereInput = {
     ...(role === "CUSTOMER" ? { creatorId: userId } : {}),
+    ...(role === "AGENT" ? { assigneeId: userId } : {}),
     ...(status ? { status } : {}),
   };
 
@@ -114,6 +127,7 @@ export async function listTickets(options: ListTicketsOptions) {
   };
 }
 
+// Get a single ticket with role-based access control
 export async function getTicketById(
   ticketId: string,
   userId: string,
@@ -146,10 +160,16 @@ export async function getTicketById(
     return null;
   }
 
+  // Agents can only access tickets assigned to them.
+  if (role === "AGENT" && ticket.assigneeId !== userId) {
+    return null;
+  }
+
+  // Admins can access all tickets.
   return ticket;
 }
 
-
+// Update ticket status
 export async function updateTicketStatus(
   ticketId: string,
   status: TicketStatus,
@@ -176,17 +196,19 @@ export async function updateTicketStatus(
   });
 }
 
+// Assign a ticket to an existing AGENT
 export async function assignTicket(
   ticketId: string,
   assigneeId: string,
 ) {
-  // Only existing AGENT accounts can be assigned tickets.
   const agent = await prisma.user.findFirst({
     where: {
       id: assigneeId,
       role: "AGENT",
     },
-    select: { id: true },
+    select: {
+      id: true,
+    },
   });
 
   if (!agent) {
@@ -195,7 +217,9 @@ export async function assignTicket(
 
   const existingTicket = await prisma.ticket.findUnique({
     where: { id: ticketId },
-    select: { id: true },
+    select: {
+      id: true,
+    },
   });
 
   if (!existingTicket) {
@@ -204,7 +228,9 @@ export async function assignTicket(
 
   const ticket = await prisma.ticket.update({
     where: { id: ticketId },
-    data: { assigneeId: agent.id },
+    data: {
+      assigneeId: agent.id,
+    },
     select: {
       id: true,
       title: true,
