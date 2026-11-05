@@ -8,7 +8,8 @@
     "build": "tsc",
     "test": "vitest run",
     "start": "node dist/src/server.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "admin:create": "tsx prisma/create-admin.ts"
   },
   "keywords": [
     "support",

@@ -1,4 +1,3 @@
-
 import swaggerUi from "swagger-ui-express";
 import type { Express } from "express";
 import type { OpenAPIV3 } from "openapi-types";
@@ -408,6 +407,89 @@ const swaggerDocument: OpenAPIV3.Document = {
           "401": { description: "Authentication required" },
           "403": { description: "Insufficient permissions" },
           "500": { description: "Internal server error" },
+        },
+      },
+    },
+
+    "/api/v1/users": {
+      get: {
+        tags: ["Users"],
+        summary: "List all users",
+        description:
+          "Returns a paginated list of users. Requires ADMIN role. Password hashes and authentication details are never returned.",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "page",
+            in: "query",
+            required: false,
+            schema: { type: "integer", minimum: 1, default: 1 },
+          },
+          {
+            name: "limit",
+            in: "query",
+            required: false,
+            schema: { type: "integer", minimum: 1, maximum: 100, default: 10 },
+          },
+          {
+            name: "role",
+            in: "query",
+            required: false,
+            schema: {
+              type: "string",
+              enum: ["CUSTOMER", "AGENT", "ADMIN"],
+            },
+          },
+        ],
+        responses: {
+          "200": { description: "Users retrieved successfully" },
+          "400": { description: "Invalid query parameters" },
+          "401": { description: "Authentication required" },
+          "403": { description: "ADMIN role required" },
+          "500": { description: "Unable to fetch users" },
+        },
+      },
+    },
+
+    "/api/v1/users/{id}/role": {
+      patch: {
+        tags: ["Users"],
+        summary: "Update a user's role",
+        description:
+          "Requires ADMIN role. Only CUSTOMER and AGENT roles can be assigned. Existing ADMIN accounts cannot be modified through this endpoint.",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["role"],
+                properties: {
+                  role: {
+                    type: "string",
+                    enum: ["CUSTOMER", "AGENT"],
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "User role updated successfully" },
+          "400": { description: "Invalid user ID or role" },
+          "401": { description: "Authentication required" },
+          "403": { description: "ADMIN role required or target is an ADMIN" },
+          "404": { description: "User not found" },
+          "500": { description: "Unable to update user role" },
         },
       },
     },
