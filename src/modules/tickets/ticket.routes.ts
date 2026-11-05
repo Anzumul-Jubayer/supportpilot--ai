@@ -9,6 +9,7 @@ import {
   assignTicketHandler,
 } from "./ticket-management.controller.js";
 import { createTicketHandler } from "./ticket.controller.js";
+
 const router = Router();
 
 router.post("/", authenticate, createTicketHandler);

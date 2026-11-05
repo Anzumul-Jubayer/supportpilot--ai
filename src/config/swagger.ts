@@ -1,4 +1,3 @@
-
 import swaggerUi from "swagger-ui-express";
 import type { Express } from "express";
 import type { OpenAPIV3 } from "openapi-types";
@@ -109,117 +108,208 @@ const swaggerDocument: OpenAPIV3.Document = {
         },
       },
     },
-"/api/v1/auth/me": {
-  get: {
-    tags: ["Authentication"],
-    summary: "Get current authenticated user",
-    description:
-      "Returns the profile of the currently logged-in user. Requires a valid JWT.",
-    security: [{ bearerAuth: [] }],
-    responses: {
-      "200": {
-        description: "Current user retrieved successfully",
-        content: {
-          "application/json": {
-            schema: {
-              type: "object",
-              properties: {
-                success: { type: "boolean", example: true },
-                data: {
+    "/api/v1/auth/me": {
+      get: {
+        tags: ["Authentication"],
+        summary: "Get current authenticated user",
+        description:
+          "Returns the profile of the currently logged-in user. Requires a valid JWT.",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          "200": {
+            description: "Current user retrieved successfully",
+            content: {
+              "application/json": {
+                schema: {
                   type: "object",
                   properties: {
-                    userId: { type: "string", format: "uuid" },
-                    name: { type: "string", example: "Support Admin" },
-                    email: {
-                      type: "string",
-                      format: "email",
-                      example: "admin@example.com",
-                    },
-                    role: {
-                      type: "string",
-                      enum: ["CUSTOMER", "AGENT", "ADMIN"],
+                    success: { type: "boolean", example: true },
+                    data: {
+                      type: "object",
+                      properties: {
+                        userId: { type: "string", format: "uuid" },
+                        name: { type: "string", example: "Support Admin" },
+                        email: {
+                          type: "string",
+                          format: "email",
+                          example: "admin@example.com",
+                        },
+                        role: {
+                          type: "string",
+                          enum: ["CUSTOMER", "AGENT", "ADMIN"],
+                        },
+                      },
                     },
                   },
                 },
               },
             },
           },
+          "401": { description: "Authentication required" },
         },
       },
-      "401": { description: "Authentication required" },
     },
-  },
-},
-    "/api/v1/tickets": {
-      post: {
-        tags: ["Tickets"],
-        summary: "Create a ticket",
-        security: [{ bearerAuth: [] }],
-        requestBody: {
-          required: true,
+"/api/v1/tickets": {
+    get: {
+      tags: ["Tickets"],
+      summary: "List and search tickets",
+      description:
+        "Returns paginated tickets with optional search and status filtering. Customers see their own tickets, agents see tickets assigned to them, and admins see all tickets. Search matches ticket titles and descriptions.",
+      security: [{ bearerAuth: [] }],
+
+      parameters: [
+        {
+          name: "search",
+          in: "query",
+          required: false,
+          description: "Search tickets by title or description.",
+          schema: {
+            type: "string",
+            minLength: 1,
+            maxLength: 150,
+            example: "payment",
+          },
+        },
+        {
+          name: "page",
+          in: "query",
+          required: false,
+          description: "Page number.",
+          schema: {
+            type: "integer",
+            minimum: 1,
+            default: 1,
+          },
+        },
+        {
+          name: "limit",
+          in: "query",
+          required: false,
+          description: "Number of tickets per page.",
+          schema: {
+            type: "integer",
+            minimum: 1,
+            maximum: 100,
+            default: 10,
+          },
+        },
+        {
+          name: "status",
+          in: "query",
+          required: false,
+          description: "Filter tickets by status.",
+          schema: {
+            type: "string",
+            enum: ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"],
+          },
+        },
+      ],
+
+      responses: {
+        "200": {
+          description: "Tickets retrieved successfully",
           content: {
             "application/json": {
               schema: {
                 type: "object",
-                required: ["title", "description"],
                 properties: {
-                  title: { type: "string", minLength: 5, maxLength: 150 },
-                  description: {
-                    type: "string",
-                    minLength: 10,
-                    maxLength: 5000,
+                  success: {
+                    type: "boolean",
+                    example: true,
+                  },
+                  data: {
+                    type: "object",
+                    properties: {
+                      tickets: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            id: {
+                              type: "string",
+                              format: "uuid",
+                            },
+                            title: {
+                              type: "string",
+                              example: "Payment issue",
+                            },
+                            description: {
+                              type: "string",
+                              example: "Unable to complete payment.",
+                            },
+                            status: {
+                              type: "string",
+                              enum: [
+                                "OPEN",
+                                "IN_PROGRESS",
+                                "RESOLVED",
+                                "CLOSED",
+                              ],
+                            },
+                            priority: {
+                              type: "string",
+                              enum: ["LOW", "MEDIUM", "HIGH", "URGENT"],
+                            },
+                            category: {
+                              type: "string",
+                              nullable: true,
+                            },
+                            createdAt: {
+                              type: "string",
+                              format: "date-time",
+                            },
+                            creatorId: {
+                              type: "string",
+                              format: "uuid",
+                            },
+                            assigneeId: {
+                              type: "string",
+                              format: "uuid",
+                              nullable: true,
+                            },
+                          },
+                        },
+                      },
+                      pagination: {
+                        type: "object",
+                        properties: {
+                          page: {
+                            type: "integer",
+                            example: 1,
+                          },
+                          limit: {
+                            type: "integer",
+                            example: 10,
+                          },
+                          total: {
+                            type: "integer",
+                            example: 25,
+                          },
+                          totalPages: {
+                            type: "integer",
+                            example: 3,
+                          },
+                        },
+                      },
+                    },
                   },
                 },
               },
             },
           },
         },
-        responses: {
-          "201": { description: "Ticket created successfully" },
-          "400": { description: "Invalid ticket data" },
-          "401": { description: "Authentication required" },
-          "500": { description: "Internal server error" },
+        "400": {
+          description: "Invalid query parameters",
         },
-      },
-
-      get: {
-        tags: ["Tickets"],
-        summary: "List tickets",
-        description:
-          "Customers see their own tickets, agents see assigned tickets, and admins see all tickets. Results are paginated and can be filtered by status.",
-        security: [{ bearerAuth: [] }],
-        parameters: [
-          {
-            name: "page",
-            in: "query",
-            required: false,
-            schema: { type: "integer", minimum: 1, default: 1 },
-          },
-          {
-            name: "limit",
-            in: "query",
-            required: false,
-            schema: { type: "integer", minimum: 1, maximum: 100, default: 10 },
-          },
-          {
-            name: "status",
-            in: "query",
-            required: false,
-            schema: {
-              type: "string",
-              enum: ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"],
-            },
-          },
-        ],
-        responses: {
-          "200": { description: "Tickets retrieved successfully" },
-          "400": { description: "Invalid query parameters" },
-          "401": { description: "Authentication required" },
-          "500": { description: "Internal server error" },
+        "401": {
+          description: "Authentication required",
+        },
+        "500": {
+          description: "Internal server error",
         },
       },
     },
-
+  },
     "/api/v1/tickets/{id}": {
       get: {
         tags: ["Tickets"],

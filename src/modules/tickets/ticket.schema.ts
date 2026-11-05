@@ -6,13 +6,17 @@ export const createTicketSchema = z.object({
 });
 export const listTicketsSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
+
   limit: z.coerce.number().int().min(1).max(100).default(10),
+
   status: z.enum([
     "OPEN",
     "IN_PROGRESS",
     "RESOLVED",
     "CLOSED",
   ]).optional(),
+
+  search: z.string().trim().min(1).max(150).optional(),
 });
 export const updateTicketStatusSchema = z.object({
   status: z.enum([

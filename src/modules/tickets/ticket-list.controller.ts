@@ -1,3 +1,4 @@
+
 import type { Response } from "express";
 import type { AuthenticatedRequest } from "../auth/auth.middleware.js";
 import { listTicketsSchema } from "./ticket.schema.js";
@@ -7,6 +8,7 @@ export async function listTicketsHandler(
   req: AuthenticatedRequest,
   res: Response,
 ): Promise<void> {
+  // Validate query parameters
   const parsed = listTicketsSchema.safeParse(req.query);
 
   if (!parsed.success) {
@@ -21,6 +23,7 @@ export async function listTicketsHandler(
     return;
   }
 
+  // Check authentication
   if (!req.user) {
     res.status(401).json({
       success: false,
@@ -30,6 +33,7 @@ export async function listTicketsHandler(
   }
 
   try {
+    // Fetch tickets with pagination, status and search filters
     const result = await listTickets({
       ...parsed.data,
       userId: req.user.id,

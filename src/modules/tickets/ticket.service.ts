@@ -11,6 +11,7 @@ type ListTicketsOptions = {
   page: number;
   limit: number;
   status?: TicketStatus;
+  search?: string;
   userId: string;
   role: UserRole;
 };
@@ -86,14 +87,34 @@ export async function getTickets(
   };
 }
 
-// Get tickets with optional status filtering
+
+// Get tickets with pagination, status filtering and search
 export async function listTickets(options: ListTicketsOptions) {
-  const { page, limit, status, userId, role } = options;
+  const { page, limit, status, search, userId, role } = options;
 
   const where: Prisma.TicketWhereInput = {
     ...(role === "CUSTOMER" ? { creatorId: userId } : {}),
     ...(role === "AGENT" ? { assigneeId: userId } : {}),
     ...(status ? { status } : {}),
+
+    ...(search
+      ? {
+          OR: [
+            {
+              title: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              description: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+          ],
+        }
+      : {}),
   };
 
   const [tickets, total] = await Promise.all([
@@ -105,6 +126,7 @@ export async function listTickets(options: ListTicketsOptions) {
       select: {
         id: true,
         title: true,
+        description: true,
         status: true,
         priority: true,
         category: true,
@@ -113,6 +135,7 @@ export async function listTickets(options: ListTicketsOptions) {
         assigneeId: true,
       },
     }),
+
     prisma.ticket.count({ where }),
   ]);
 
