@@ -26,17 +26,13 @@ export async function getDashboardStats({
     prisma.ticket.groupBy({
       by: ["status"],
       where,
-      _count: {
-        _all: true,
-      },
+      _count: { _all: true },
     }),
 
     prisma.ticket.findMany({
       where,
       take: 5,
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: { createdAt: "desc" },
       select: {
         id: true,
         title: true,
@@ -58,7 +54,7 @@ export async function getDashboardStats({
     counts[item.status] = item._count._all;
   }
 
-  return {
+  const ticketStats = {
     totalTickets,
     openTickets: counts.OPEN,
     inProgressTickets: counts.IN_PROGRESS,
@@ -66,4 +62,22 @@ export async function getDashboardStats({
     closedTickets: counts.CLOSED,
     recentTickets,
   };
+
+  // Only ADMIN receives global user statistics.
+  if (role === "ADMIN") {
+    const [totalUsers, totalCustomers, totalAgents] = await Promise.all([
+      prisma.user.count(),
+      prisma.user.count({ where: { role: "CUSTOMER" } }),
+      prisma.user.count({ where: { role: "AGENT" } }),
+    ]);
+
+    return {
+      ...ticketStats,
+      totalUsers,
+      totalCustomers,
+      totalAgents,
+    };
+  }
+
+  return ticketStats;
 }
