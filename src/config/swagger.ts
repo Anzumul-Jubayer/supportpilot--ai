@@ -1,3 +1,4 @@
+
 import swaggerUi from "swagger-ui-express";
 import type { Express } from "express";
 import type { OpenAPIV3 } from "openapi-types";
@@ -29,7 +30,7 @@ const swaggerDocument: OpenAPIV3.Document = {
     { name: "Tickets", description: "Support ticket management" },
     { name: "Comments", description: "Ticket comments" },
     { name: "AI", description: "AI-assisted ticket analysis" },
-    { name: "Users", description: "User management" },
+    { name: "Users", description: "User and agent management" },
     { name: "Dashboard", description: "Dashboard statistics and activity" },
   ],
 
@@ -411,6 +412,65 @@ const swaggerDocument: OpenAPIV3.Document = {
       },
     },
 
+    "/api/v1/users/agents/overview": {
+      get: {
+        tags: ["Users"],
+        summary: "Get agent workload overview",
+        description:
+          "Returns every agent with their total assigned tickets and ticket counts by status. Requires ADMIN role.",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          "200": {
+            description: "Agent workload overview retrieved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: { type: "boolean", example: true },
+                    data: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string", format: "uuid" },
+                          name: { type: "string", example: "Support Agent" },
+                          email: {
+                            type: "string",
+                            format: "email",
+                            example: "agent@example.com",
+                          },
+                          totalTickets: {
+                            type: "integer",
+                            example: 5,
+                          },
+                          openTickets: {
+                            type: "integer",
+                            example: 2,
+                          },
+                          inProgressTickets: {
+                            type: "integer",
+                            example: 1,
+                          },
+                          resolvedTickets: {
+                            type: "integer",
+                            example: 2,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "401": { description: "Authentication required" },
+          "403": { description: "ADMIN role required" },
+          "500": { description: "Unable to fetch agents overview" },
+        },
+      },
+    },
+
     "/api/v1/users": {
       get: {
         tags: ["Users"],
@@ -499,7 +559,7 @@ const swaggerDocument: OpenAPIV3.Document = {
         tags: ["Dashboard"],
         summary: "Get dashboard statistics",
         description:
-          "Returns ticket counts by status and the five most recent tickets. CUSTOMER users see their own tickets, AGENT users see tickets assigned to them, and ADMIN users see all tickets.",
+          "Returns ticket counts by status and the five most recent tickets. CUSTOMER users see their own tickets, AGENT users see tickets assigned to them, and ADMIN users see all tickets. ADMIN responses also include global user counts.",
         security: [{ bearerAuth: [] }],
         responses: {
           "200": {
@@ -521,6 +581,21 @@ const swaggerDocument: OpenAPIV3.Document = {
                         inProgressTickets: { type: "integer", example: 3 },
                         resolvedTickets: { type: "integer", example: 4 },
                         closedTickets: { type: "integer", example: 1 },
+                        totalUsers: {
+                          type: "integer",
+                          example: 26,
+                          description: "ADMIN only",
+                        },
+                        totalCustomers: {
+                          type: "integer",
+                          example: 23,
+                          description: "ADMIN only",
+                        },
+                        totalAgents: {
+                          type: "integer",
+                          example: 2,
+                          description: "ADMIN only",
+                        },
                         recentTickets: {
                           type: "array",
                           items: {

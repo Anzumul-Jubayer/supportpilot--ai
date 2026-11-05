@@ -81,3 +81,49 @@ export async function updateUserRole(
     },
   });
 }
+export async function getAgentsOverview() {
+  const agents = await prisma.user.findMany({
+    where: {
+      role: "AGENT",
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      assignedTickets: {
+        select: {
+          status: true,
+        },
+      },
+    },
+    orderBy: {
+      name: "asc",
+    },
+  });
+
+  return agents.map((agent) => {
+    const totalTickets = agent.assignedTickets.length;
+
+    const openTickets = agent.assignedTickets.filter(
+      (ticket) => ticket.status === "OPEN",
+    ).length;
+
+    const inProgressTickets = agent.assignedTickets.filter(
+      (ticket) => ticket.status === "IN_PROGRESS",
+    ).length;
+
+    const resolvedTickets = agent.assignedTickets.filter(
+      (ticket) => ticket.status === "RESOLVED",
+    ).length;
+
+    return {
+      id: agent.id,
+      name: agent.name,
+      email: agent.email,
+      totalTickets,
+      openTickets,
+      inProgressTickets,
+      resolvedTickets,
+    };
+  });
+}

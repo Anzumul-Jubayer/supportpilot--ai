@@ -3,6 +3,7 @@ import { authenticate } from "../auth/auth.middleware.js";
 import { authorize } from "../auth/authorize.js";
 import {
   getAvailableAgentsHandler,
+  getAgentsOverviewHandler,
   getUsersHandler,
   updateUserRoleHandler,
 } from "./users.controller.js";
@@ -24,7 +25,13 @@ router.get(
   authorize("ADMIN"),
   getUsersHandler,
 );
-
+// Agent workload overview — ADMIN only
+router.get(
+  "/agents/overview",
+  authenticate,
+  authorize("ADMIN"),
+  getAgentsOverviewHandler,
+);
 // Update user role — ADMIN only
 router.patch(
   "/:id/role",

@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { z } from "zod";
 import {
   getAvailableAgents,
+  getAgentsOverview,
   getUsers,
   updateUserRole,
 } from "./users.service.js";
@@ -106,6 +107,26 @@ export async function updateUserRoleHandler(
     res.status(500).json({
       success: false,
       message: "Unable to update user role",
+    });
+  }
+}
+export async function getAgentsOverviewHandler(
+  _req: Request,
+  res: Response,
+): Promise<void> {
+  try {
+    const agents = await getAgentsOverview();
+
+    res.status(200).json({
+      success: true,
+      data: agents,
+    });
+  } catch (error) {
+    console.error("Fetching agents overview failed:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Unable to fetch agents overview",
     });
   }
 }
