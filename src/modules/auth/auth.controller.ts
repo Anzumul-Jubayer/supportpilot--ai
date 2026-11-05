@@ -1,4 +1,3 @@
-
 import type { Request, Response } from "express";
 
 import {
@@ -7,12 +6,9 @@ import {
   googleLoginSchema,
 } from "./auth.schema.js";
 
-import {
-  registerUser,
-  loginUser,
-  googleLogin,
-} from "./auth.service.js";
-
+import { registerUser, loginUser, googleLogin } from "./auth.service.js";
+import { prisma } from "../../lib/prisma.js";
+import type { AuthenticatedRequest } from "./auth.middleware.js";
 export async function register(req: Request, res: Response): Promise<void> {
   const parsed = registerSchema.safeParse(req.body);
 
@@ -140,6 +136,61 @@ export async function googleLoginController(
     }
 
     console.error("Google login failed:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+}
+
+export async function getMe(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
+    });
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Current user retrieved successfully",
+      data: {
+        userId: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Get current user failed:", error);
 
     res.status(500).json({
       success: false,

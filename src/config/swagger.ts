@@ -109,7 +109,47 @@ const swaggerDocument: OpenAPIV3.Document = {
         },
       },
     },
-
+"/api/v1/auth/me": {
+  get: {
+    tags: ["Authentication"],
+    summary: "Get current authenticated user",
+    description:
+      "Returns the profile of the currently logged-in user. Requires a valid JWT.",
+    security: [{ bearerAuth: [] }],
+    responses: {
+      "200": {
+        description: "Current user retrieved successfully",
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                success: { type: "boolean", example: true },
+                data: {
+                  type: "object",
+                  properties: {
+                    userId: { type: "string", format: "uuid" },
+                    name: { type: "string", example: "Support Admin" },
+                    email: {
+                      type: "string",
+                      format: "email",
+                      example: "admin@example.com",
+                    },
+                    role: {
+                      type: "string",
+                      enum: ["CUSTOMER", "AGENT", "ADMIN"],
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      "401": { description: "Authentication required" },
+    },
+  },
+},
     "/api/v1/tickets": {
       post: {
         tags: ["Tickets"],
