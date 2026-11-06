@@ -18,10 +18,11 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      "https://supportpilot-ai-client-36w9.vercel.app/login",
+      "https://supportpilot-ai-client-36w9.vercel.app",
     ],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 );
 app.use(express.json());
