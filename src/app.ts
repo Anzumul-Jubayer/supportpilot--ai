@@ -18,7 +18,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      // "https://YOUR-FRONTEND-DOMAIN.vercel.app",
+      "https://supportpilot-ai-client-36w9.vercel.app/login",
     ],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
