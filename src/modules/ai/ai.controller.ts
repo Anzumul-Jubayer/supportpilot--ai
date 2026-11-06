@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 import type { Response } from "express";
 import type { AuthenticatedRequest } from "../auth/auth.middleware.js";
@@ -29,10 +28,7 @@ export async function analyzeTicketHandler(
   }
 
   // Only agents and admins may trigger AI analysis.
-  if (
-    req.user.role !== "AGENT" &&
-    req.user.role !== "ADMIN"
-  ) {
+  if (req.user.role !== "AGENT" && req.user.role !== "ADMIN") {
     res.status(403).json({
       success: false,
       message: "Only agents and admins can analyze tickets",
@@ -41,9 +37,7 @@ export async function analyzeTicketHandler(
   }
 
   try {
-    const analysis = await analyzeAndSaveTicket(
-      idResult.data,
-    );
+    const analysis = await analyzeAndSaveTicket(idResult.data);
 
     if (!analysis) {
       res.status(404).json({
@@ -59,7 +53,13 @@ export async function analyzeTicketHandler(
       data: analysis,
     });
   } catch (error) {
-    console.error("Failed to analyze ticket:", error);
+    if (error instanceof Error) {
+      console.error("AI Analysis Error:", error.message);
+      console.error("Underlying cause:", error.cause);
+      console.error("Stack:", error.stack);
+    } else {
+      console.error("Unknown AI error:", error);
+    }
 
     res.status(500).json({
       success: false,
